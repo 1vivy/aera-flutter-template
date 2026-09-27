@@ -28,9 +28,7 @@ tool/aera.sh package              # build/aera/<name>-<version>.aerap
 
 Copy the `.aerap` to the phone and install it from AERA's plugin screen. ID,
 name, version and description come from `aera.json`. Pick your own `id`
-(lowercase letters, digits, `-` and `.`). Set `"privileged": true` only if the
-app needs recovery's own access (partitions, `/data`, `/sys`); it is an opt-in
-the user has to grant. For fast UI work,
+(lowercase letters, digits, `-` and `.`). For fast UI work,
 `flutter run -d linux` also works; AERA-only features then report that they
 are unavailable.
 
@@ -47,7 +45,9 @@ are unavailable.
 AERA starts the app's `usr/bin/aera-plugin`, which runs the Flutter embedder
 on a full-screen pixel surface. AERA tells the app the surface size and scale
 at start, so don't assume a fixed screen. The Back gesture pops the navigator,
-and popping the last route closes the app. Storage and audio paths come from
+and popping the last route closes the app. Like every generic plugin, the app
+is a recovery module: it runs as root with recovery's own access (partitions,
+`/data`, `/sys`, recovery's tools). Storage and audio paths come from
 `aera-sdk`, which follows whatever the host hands out.
 
 Builds are debug (JIT) for now; the kits come from

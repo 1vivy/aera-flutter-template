@@ -98,10 +98,8 @@ package)
         fi
     done
     name=$(manifest name) version=$(manifest version)
-    privileged=()
-    [ "$(manifest privileged)" = True ] && privileged=(--privileged)
     python3 tool/make_aerap.py --stage "$stage" --id "$(manifest id)" --name "$name" --version "$version" \
-        --description "$(manifest description)" "${privileged[@]}" --out "$out/${name// /-}-$version.aerap"
+        --description "$(manifest description)" --out "$out/${name// /-}-$version.aerap"
     ;;
 
 *)
