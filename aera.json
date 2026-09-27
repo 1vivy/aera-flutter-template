@@ -1,5 +1,7 @@
 {
+  "id": "dev.aera.flutter-app",
   "name": "AERA App",
   "version": "0.1.0",
-  "description": "A Flutter app for AERA Recovery."
+  "description": "A Flutter app for AERA Recovery.",
+  "privileged": false
 }

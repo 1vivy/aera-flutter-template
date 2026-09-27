@@ -22,9 +22,10 @@ jobs:
           echo "version=$(python3 -c "import json; print(json.load(open('aera.json'))['version'])")" >> "$GITHUB_OUTPUT"
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.meta.outputs.version }}
+          tag_name: generic-host-v${{ steps.meta.outputs.version }}
           target_commitish: ${{ github.sha }}
           name: ${{ steps.meta.outputs.version }}
           body: |
-            Install on the phone from AERA's plugin screen. It installs as an unofficial app in the browser slot and replaces AERA Browser until you reinstall it.
+            For AERA's generic pixel + GPU plugin host, which is not released yet (assumed interface). Install from AERA's plugin screen once a build with that host is out. It installs under its own ID next to AERA Browser.
+          prerelease: true
           files: build/aera/*.aerap

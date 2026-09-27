@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 # Build and run this app for AERA Recovery.
 #
-#   tool/aera.sh sim [simulator options]   run it on this PC in AERA's bridge
+#   tool/aera.sh sim [simulator options]   run it on this PC against a simulated AERA host
 #   tool/aera.sh package                   build build/aera/<name>-<version>.aerap
 #   tool/aera.sh fetch                     only download the kits
 #
-# The kits come from github.com/1vivy/aera-flutter-embedder releases and must
+# The kits come from github.com/1vivy/aera-flutter-embedder generic-host
+# releases (built for AERA's upcoming pixel + GPU host) and must
 # match your Flutter release, because the engine inside them is a debug (JIT)
 # engine. Set AERA_KIT_DIR to a folder holding the .tar.xz files to skip the
 # download. `sim` passes its options to aera-host-sim, for example
-# `--until 5000 --tap 180,350@1000 --save-at 3000`.
+# `--until 5000 --tap 180,350@1000 --save-at 3000 --size 1080x2400`.
 set -euo pipefail
 
 root=$(cd "$(dirname "$0")/.." && pwd)
@@ -19,9 +20,9 @@ out=build/aera
 
 flutter_version=$(flutter --version --machine | python3 -c 'import json,sys; print(json.load(sys.stdin)["frameworkVersion"])')
 kits=.aera/$flutter_version
-release=${AERA_KIT_URL:-https://github.com/1vivy/aera-flutter-embedder/releases/download/flutter-$flutter_version}
+release=${AERA_KIT_URL:-https://github.com/1vivy/aera-flutter-embedder/releases/download/generic-host-flutter-$flutter_version}
 
-manifest() { python3 -c "import json; print(json.load(open('aera.json'))['$1'])"; }
+manifest() { python3 -c "import json; print(json.load(open('aera.json')).get('$1', ''))"; }
 
 fetch_kit() { # kit-name -> extracted directory
     local name=$1 dir=$kits/$1
@@ -65,7 +66,8 @@ sim)
     bundle
     cargo build --release --manifest-path rust/Cargo.toml >&2
     stage=$out/sim
-    rm -rf "$stage" && mkdir -p "$stage/usr/lib" "$stage/usr/share/flutter"
+    rm -rf "$stage" && mkdir -p "$stage/usr/bin" "$stage/usr/lib" "$stage/usr/share/flutter"
+    cp "$kit/bin/aera-plugin" "$kit/bin/aera-flutter" "$stage/usr/bin/"
     cp "$kit/usr/lib/libflutter_engine.so" "rust/target/release/lib$crate.so" "$stage/usr/lib/"
     cp "$kit/usr/share/flutter/icudtl.dat" "$stage/usr/share/flutter/"
     cp -r build/flutter_assets "$stage/usr/share/flutter/flutter_assets"
@@ -73,7 +75,7 @@ sim)
     # llvmpipe's threads crash under the embedder on some PCs; softpipe is
     # slow but steady. On the phone AERA uses Zink on the GPU instead.
     GALLIUM_DRIVER=${GALLIUM_DRIVER:-softpipe} "$kit/bin/aera-host-sim" \
-        --worker "$kit/bin/aera-browser-worker" --root "$stage" --out "$out/frames" "$@"
+        --plugin "$stage/usr/bin/aera-plugin" --root "$(pwd)/$stage" --out "$out/frames" "$@"
     echo "Frames are in $out/frames" >&2
     ;;
 
@@ -96,8 +98,10 @@ package)
         fi
     done
     name=$(manifest name) version=$(manifest version)
-    python3 tool/make_aerap.py --stage "$stage" --name "$name" --version "$version" \
-        --description "$(manifest description)" --out "$out/${name// /-}-$version.aerap"
+    privileged=()
+    [ "$(manifest privileged)" = True ] && privileged=(--privileged)
+    python3 tool/make_aerap.py --stage "$stage" --id "$(manifest id)" --name "$name" --version "$version" \
+        --description "$(manifest description)" "${privileged[@]}" --out "$out/${name// /-}-$version.aerap"
     ;;
 
 *)
