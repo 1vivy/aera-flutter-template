@@ -9,7 +9,7 @@ crate-type = ["cdylib", "staticlib"]
 [dependencies]
 flutter_rust_bridge = "=2.13.0"
 anyhow = "1"
-aera-sdk = { path = "../../aera-flutter-sdk/aera-sdk" } # LOCAL: switch to git before pushing
+aera-sdk = { git = "https://github.com/1vivy/aera-flutter-sdk", branch = "main" }
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
