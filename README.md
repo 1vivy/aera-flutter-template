@@ -61,6 +61,6 @@ but no listening sockets, `/profile` for private files, `/downloads` for
 is 1080x2100 at 3x (360x700 logical pixels). The Back button pops the
 navigator.
 
-Builds are debug (JIT) for now; the kits come from
+Packaged builds are release (AOT) by default; the kits and engines come from
 [aera-flutter-embedder](https://github.com/1vivy/aera-flutter-embedder)
 releases.
