@@ -23,7 +23,13 @@ tool/aera.sh sim                  # run on this PC in AERA's bridge; frames land
 tool/aera.sh sim --until 5000 --tap 180,190@1000 --save-at 3000
 tool/aera.sh package              # build/aera/<name>-<version>.aerap
 AERA_RENDERER=impeller tool/aera.sh package   # build/aera/<name>-<version>-impeller.aerap
+AERA_MODE=debug tool/aera.sh package          # build/aera/<name>-<version>-debug.aerap
 ```
+
+`package` makes a release build: the Dart code is AOT-compiled into
+`libapp.so` (`tool/build_aot_app.sh`) and runs on the release engine from the
+kits release. `AERA_MODE=profile` or `debug` makes the others; `sim` always
+runs a debug build.
 
 `AERA_RENDERER` picks how the app draws: `gl` (the default, Skia on OpenGL
 ES through Zink), `vulkan` (Skia straight on the phone's Vulkan driver) or
