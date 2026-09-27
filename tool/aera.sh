@@ -83,7 +83,7 @@ package)
     cargo build --release --target aarch64-unknown-linux-gnu --manifest-path rust/Cargo.toml >&2
     library=rust/target/aarch64-unknown-linux-gnu/release/lib$crate.so
     stage=$out/stage
-    rm -rf "$stage" && cp -a "$kit" "$stage"
+    rm -rf "$stage" && mkdir -p "$out" && cp -a "$kit" "$stage"
     rm -f "$stage/flutter-version" "$stage/engine-revision"
     cp -r build/flutter_assets "$stage/usr/share/flutter/flutter_assets"
     cp "$library" "$stage/usr/lib/"
