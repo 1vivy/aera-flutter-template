@@ -10,12 +10,18 @@
 # engine. Set AERA_KIT_DIR to a folder holding the .tar.xz files to skip the
 # download. `sim` passes its options to aera-host-sim, for example
 # `--until 5000 --tap 180,350@1000 --save-at 3000`.
+#
+# AERA_RENDERER picks how the app draws: gl (default, Skia on OpenGL ES),
+# vulkan (Skia on Vulkan) or impeller (Impeller on Vulkan). `package` bakes
+# it into the .aerap and adds it to the file name when it is not gl.
 set -euo pipefail
 
 root=$(cd "$(dirname "$0")/.." && pwd)
 cd "$root"
 crate=aera_app_core
 out=build/aera
+renderer=${AERA_RENDERER:-gl}
+case $renderer in gl|vulkan|impeller) ;; *) echo "AERA_RENDERER must be gl, vulkan or impeller" >&2; exit 2 ;; esac
 
 flutter_version=$(flutter --version --machine | python3 -c 'import json,sys; print(json.load(sys.stdin)["frameworkVersion"])')
 kits=.aera/$flutter_version
@@ -72,7 +78,7 @@ sim)
     mkdir -p "$out/frames"
     # llvmpipe's threads crash under the embedder on some PCs; softpipe is
     # slow but steady. On the phone AERA uses Zink on the GPU instead.
-    GALLIUM_DRIVER=${GALLIUM_DRIVER:-softpipe} "$kit/bin/aera-host-sim" \
+    AERA_FLUTTER_RENDERER=$renderer GALLIUM_DRIVER=${GALLIUM_DRIVER:-softpipe} "$kit/bin/aera-host-sim" \
         --worker "$kit/bin/aera-browser-worker" --root "$stage" --out "$out/frames" "$@"
     echo "Frames are in $out/frames" >&2
     ;;
@@ -87,6 +93,7 @@ package)
     rm -f "$stage/flutter-version" "$stage/engine-revision"
     cp -r build/flutter_assets "$stage/usr/share/flutter/flutter_assets"
     cp "$library" "$stage/usr/lib/"
+    echo "$renderer" > "$stage/usr/share/flutter/renderer"
     # Anything the Rust library links must already be in the runtime.
     readelf=$(command -v aarch64-linux-gnu-readelf || command -v readelf)
     for lib in $("$readelf" -d "$library" | sed -n 's/.*(NEEDED).*\[\(.*\)\]/\1/p'); do
@@ -95,9 +102,10 @@ package)
             exit 1
         fi
     done
-    name=$(manifest name) version=$(manifest version)
+    name=$(manifest name) version=$(manifest version) suffix=
+    [ "$renderer" = gl ] || suffix=-$renderer
     python3 tool/make_aerap.py --stage "$stage" --name "$name" --version "$version" \
-        --description "$(manifest description)" --out "$out/${name// /-}-$version.aerap"
+        --description "$(manifest description)" --out "$out/${name// /-}-$version$suffix.aerap"
     ;;
 
 *)

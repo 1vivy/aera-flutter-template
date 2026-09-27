@@ -1,8 +1,16 @@
 # Builds the app .aerap and publishes it as release v<version> (from
 # aera.json). Needs the kits release for this Flutter version in
-# 1vivy/aera-flutter-embedder. Run it from the Actions tab.
+# 1vivy/aera-flutter-embedder. Run it from the Actions tab. A renderer other
+# than gl is published as its own release, v<version>-<renderer>.
 name: Release
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      renderer:
+        description: How the app draws
+        type: choice
+        options: [gl, vulkan, impeller]
+        default: gl
 permissions:
   contents: write
 jobs:
@@ -17,9 +25,15 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
       - run: rustup target add aarch64-unknown-linux-gnu
       - run: tool/aera.sh package
+        env:
+          AERA_RENDERER: ${{ inputs.renderer }}
       - id: meta
         run: |
-          echo "version=$(python3 -c "import json; print(json.load(open('aera.json'))['version'])")" >> "$GITHUB_OUTPUT"
+          version=$(python3 -c "import json; print(json.load(open('aera.json'))['version'])")
+          [ "$RENDERER" = gl ] || version=$version-$RENDERER
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+        env:
+          RENDERER: ${{ inputs.renderer }}
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.meta.outputs.version }}

@@ -22,7 +22,12 @@ address bar and dock around the app.
 tool/aera.sh sim                  # run on this PC in AERA's bridge; frames land in build/aera/frames
 tool/aera.sh sim --until 5000 --tap 180,190@1000 --save-at 3000
 tool/aera.sh package              # build/aera/<name>-<version>.aerap
+AERA_RENDERER=impeller tool/aera.sh package   # build/aera/<name>-<version>-impeller.aerap
 ```
+
+`AERA_RENDERER` picks how the app draws: `gl` (the default, Skia on OpenGL
+ES through Zink), `vulkan` (Skia straight on the phone's Vulkan driver) or
+`impeller` (Impeller on Vulkan). All three use the GPU.
 
 Copy the `.aerap` to the phone and install it from AERA's plugin screen. Name,
 version and description come from `aera.json`. For fast UI work,
