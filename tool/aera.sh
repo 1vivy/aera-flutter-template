@@ -55,8 +55,15 @@ fetch_kit() { # kit-name -> extracted directory
     echo "$dir"
 }
 
+# The app can show which build it is: String.fromEnvironment('AERA_APP_VERSION'),
+# 'AERA_APP_BUILD' (commit and time) and 'AERA_RENDERER'.
 bundle() {
-    flutter build bundle --debug >&2
+    local commit
+    commit=$(git rev-parse --short HEAD 2>/dev/null || echo local)
+    flutter build bundle --debug \
+        --dart-define=AERA_APP_VERSION="$(manifest version)" \
+        --dart-define=AERA_APP_BUILD="$commit $(date -u +%Y-%m-%dT%H:%MZ)" \
+        --dart-define=AERA_RENDERER="$renderer" >&2
 }
 
 case ${1:-} in

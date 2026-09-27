@@ -29,6 +29,11 @@ AERA_RENDERER=impeller tool/aera.sh package   # build/aera/<name>-<version>-impe
 ES through Zink), `vulkan` (Skia straight on the phone's Vulkan driver) or
 `impeller` (Impeller on Vulkan). All three use the GPU.
 
+The build is baked into the app: `String.fromEnvironment('AERA_APP_VERSION')`,
+`'AERA_APP_BUILD'` (commit and time) and `'AERA_RENDERER'`. Showing them
+helps on the phone, because AERA keeps the app running after a reinstall
+until you clear it from Recents.
+
 Copy the `.aerap` to the phone and install it from AERA's plugin screen. Name,
 version and description come from `aera.json`. For fast UI work,
 `flutter run -d linux` also works; AERA-only features then report that they
