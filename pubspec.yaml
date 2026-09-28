@@ -15,22 +15,22 @@ dependencies:
   surfaces:
     git:
       url: https://github.com/1vivy/aera-flutter-sdk
-      ref: 7294af536411bdfb5166a402d5c9c85b8dad0e5c
+      ref: 5f7fde170bd418be889b991c025325812b6c3cea
       path: packages/surfaces
   surfaces_ui:
     git:
       url: https://github.com/1vivy/aera-flutter-sdk
-      ref: 7294af536411bdfb5166a402d5c9c85b8dad0e5c
+      ref: 5f7fde170bd418be889b991c025325812b6c3cea
       path: packages/surfaces_ui
   surfaces_webui:
     git:
       url: https://github.com/1vivy/aera-flutter-sdk
-      ref: 7294af536411bdfb5166a402d5c9c85b8dad0e5c
+      ref: 5f7fde170bd418be889b991c025325812b6c3cea
       path: packages/surfaces_webui
   surfaces_aera:
     git:
       url: https://github.com/1vivy/aera-flutter-sdk
-      ref: 7294af536411bdfb5166a402d5c9c85b8dad0e5c
+      ref: 5f7fde170bd418be889b991c025325812b6c3cea
       path: packages/surfaces_aera
 
 dev_dependencies:
@@ -40,7 +40,7 @@ dev_dependencies:
   surfaces_cli:
     git:
       url: https://github.com/1vivy/aera-flutter-sdk
-      ref: 7294af536411bdfb5166a402d5c9c85b8dad0e5c
+      ref: 5f7fde170bd418be889b991c025325812b6c3cea
       path: tools/cli
 
 flutter:
