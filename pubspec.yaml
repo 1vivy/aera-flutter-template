@@ -37,6 +37,10 @@ dependencies:
   aera_app_core:
     path: rust_builder
   flutter_rust_bridge: 2.13.0
+  aera_flutter:
+    git:
+      url: https://github.com/1vivy/aera-flutter-sdk
+      path: aera_flutter
 
 dev_dependencies:
   flutter_test:

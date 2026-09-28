@@ -1,3 +1,4 @@
+import 'package:aera_flutter/aera_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge.dart';
 
@@ -23,6 +24,8 @@ class App extends StatelessWidget {
           brightness: Brightness.dark,
         ),
       ),
+      // Routes AERA's back gesture to this app's navigator.
+      builder: (context, child) => AeraScope(child: child!),
       home: const HomePage(),
     );
   }

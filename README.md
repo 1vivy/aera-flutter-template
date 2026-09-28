@@ -58,8 +58,20 @@ are unavailable.
 The app runs in AERA's browser jail: its own payload as `/`, no root, network
 but no listening sockets, `/profile` for private files, `/downloads` for
 `/sdcard/AERA/Downloads`, 512 MB of `/tmp`, about 1.5 GB of memory. The screen
-is 1080x2100 at 3x (360x700 logical pixels). The Back button pops the
-navigator.
+is 1080x2100 at 3x (360x700 logical pixels).
+
+AERA's own system features come from the `aera_flutter` package
+([aera-flutter-sdk](https://github.com/1vivy/aera-flutter-sdk)):
+
+- **Back**: `AeraScope` (already in `lib/main.dart`) tells AERA whether the app
+  can go back, so the edge-back gesture pops routes and honours `PopScope`,
+  and leaves the app from its first page. Without it AERA never sends Back.
+- **Keyboard**: text fields open AERA's keyboard, and the app gets a bottom
+  view inset while it is up, so `Scaffold` keeps the field visible.
+- **Top bar**: `AeraSystem.instance` has `onForward`, `onReload`, `onOpen`
+  (Home and typed addresses) and `onZoom` (pinch), and `setNavigationState`
+  to enable Forward.
+- **Speaker**: `aera_sdk::speaker::Speaker::global().play(samples)` in Rust.
 
 Packaged builds are release (AOT) by default; the kits and engines come from
 [aera-flutter-embedder](https://github.com/1vivy/aera-flutter-embedder)

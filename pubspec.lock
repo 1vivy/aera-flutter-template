@@ -8,6 +8,15 @@ packages:
       relative: true
     source: path
     version: "0.0.1"
+  aera_flutter:
+    dependency: "direct main"
+    description:
+      path: aera_flutter
+      ref: HEAD
+      resolved-ref: f9618aa83826958f2a3b245de2b89de834168854
+      url: "https://github.com/1vivy/aera-flutter-sdk"
+    source: git
+    version: "0.1.0"
   args:
     dependency: transitive
     description:
@@ -320,4 +329,4 @@ packages:
     version: "3.2.0"
 sdks:
   dart: ">=3.13.4 <4.0.0"
-  flutter: ">=3.18.0-18.0.pre.54"
+  flutter: ">=3.35.0"
