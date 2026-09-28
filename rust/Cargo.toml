@@ -1,5 +1,11 @@
+# The app's Rust, as one Cargo workspace:
+# - app_native (this crate): the flutter_rust_bridge library for native
+#   targets (AERA, desktop, Android). Forwards the core and ops to Dart.
+# - core/ (app_core): the app's pure logic and its ops handler. Builds for
+#   wasm too, where it becomes web/core.wasm.
+# - worker/ (app_worker): the ops worker a WebUI module runs as root.
 [package]
-name = "aera_app_core"
+name = "app_native"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,8 +14,26 @@ crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
 flutter_rust_bridge = "=2.13.0"
-anyhow = "1"
-aera-sdk = { git = "https://github.com/1vivy/aera-flutter-sdk", branch = "main" }
+app_core = { path = "core" }
+surfaces-core = { workspace = true }
+surfaces-ops = { workspace = true }
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
+
+[workspace]
+members = [".", "core", "worker"]
+
+[workspace.dependencies]
+surfaces-core = { git = "https://github.com/1vivy/aera-flutter-sdk", branch = "claude/surfaces-stack-22gb3s" }
+surfaces-ops = { git = "https://github.com/1vivy/aera-flutter-sdk", branch = "claude/surfaces-stack-22gb3s" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+# Small wasm and worker binaries.
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

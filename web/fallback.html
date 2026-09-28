@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Surfaces App</title>
+  <link rel="stylesheet" href="/internal/insets.css">
+  <style>
+    body { margin: 0; padding: 24px; padding-top: calc(24px + var(--safe-area-inset-top, 0px));
+      font: 16px system-ui, sans-serif; background: #121212; color: #e6e1e5; }
+    button { font: inherit; padding: 10px 16px; border-radius: 20px; border: 0;
+      background: #d0bcff; color: #381e72; margin: 4px 8px 4px 0; }
+    pre { white-space: pre-wrap; background: #1d1b20; padding: 12px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h2>This WebView is too old for the app</h2>
+  <p>The app needs WebAssembly and Chromium 85 or newer. Update Android System
+    WebView (or Chrome) from the Play Store, then open the WebUI again.</p>
+  <p id="engine"></p>
+  <div id="actions"></div>
+  <pre id="out"></pre>
+  <script>
+    // ES5 only. The essentials still work through the root bridge.
+    (function () {
+      var ua = navigator.userAgent;
+      var chrome = /Chrome\/(\d+)/.exec(ua);
+      document.getElementById('engine').textContent =
+        'This WebView: ' + (chrome ? 'Chrome ' + chrome[1] : ua);
+      if (typeof ksu === 'undefined') { return; }
+      var n = 0;
+      function exec(cmd) {
+        var name = 'fallback_cb_' + (n++);
+        window[name] = function (code, out, err) {
+          document.getElementById('out').textContent = 'exit ' + code + '\n' + out + '\n' + err;
+          delete window[name];
+        };
+        ksu.exec(cmd, '{}', name);
+      }
+      function button(label, fn) {
+        var b = document.createElement('button');
+        b.textContent = label; b.onclick = fn;
+        document.getElementById('actions').appendChild(b);
+      }
+      button('Check the worker', function () {
+        var info = {};
+        try { info = JSON.parse(ksu.moduleInfo()); } catch (e) {}
+        var dir = info.moduleDir || '/data/adb/modules/surfaces_app';
+        exec("'" + dir + "/bin/worker' hello");
+      });
+      if (typeof ksu.exit === 'function') { button('Close', function () { ksu.exit(); }); }
+      else if (typeof webui !== 'undefined') { button('Close', function () { webui.exit(); }); }
+    })();
+  </script>
+</body>
+</html>

@@ -1,78 +1,77 @@
-# AERA Flutter template
+# surfaces template-app
 
-A Flutter app with a Rust core (flutter_rust_bridge) that runs **inside AERA
-Recovery**, drawn with the phone's GPU.
+The smallest [surfaces](https://github.com/1vivy/aera-flutter-sdk) app: one
+Flutter app with a Rust core that builds for every target surfaces has.
 
-AERA gives the GPU only to its browser slot, so the app is packaged as an
-unofficial plugin with the `browser` ID. Installing it replaces AERA Browser
-on that phone until the official browser is reinstalled. AERA shows its own
-address bar and dock around the app.
+| Target | Command | Output |
+| --- | --- | --- |
+| KernelSU / SukiSU / KernelSU Next / APatch / WebUI X module | `dart run surfaces_cli:surfaces build webui` | `build/webui/<id>-<version>.zip` |
+| Hosted web page (bottom rung of the WebUI ladder) | `dart run surfaces_cli:surfaces build web` | `build/web/`, `build/<id>-<version>-web.zip` |
+| AERA Recovery app slot | `dart run surfaces_cli:surfaces build aera` | `build/aera/<name>-<version>.aerap` |
+| Linux desktop | `dart run surfaces_cli:surfaces build linux` | `build/<id>-<version>-linux-x64.tar.gz` |
+| Android | `flutter build apk` | the usual APK |
+| Everything but Android | `dart run surfaces_cli:surfaces build all` | all of the above |
 
-## What you need
-
-- Flutter 3.47.5 (the kits' engine is tied to this exact release)
-- Rust with the `aarch64-unknown-linux-gnu` target and `aarch64-linux-gnu-gcc`
-  (`sudo apt install gcc-aarch64-linux-gnu`, `rustup target add aarch64-unknown-linux-gnu`)
-- `flutter_rust_bridge_codegen` 2.13.0 when you change the Rust API
-- For the PC simulator: Mesa's EGL (`libegl1`, `libgles2`)
-
-## Use it
+Try a WebUI build on a PC before installing it:
 
 ```sh
-tool/aera.sh sim                  # run on this PC in AERA's bridge; frames land in build/aera/frames
-tool/aera.sh sim --until 5000 --tap 180,190@1000 --save-at 3000
-tool/aera.sh package              # build/aera/<name>-<version>.aerap
-AERA_RENDERER=impeller tool/aera.sh package   # build/aera/<name>-<version>-impeller.aerap
-AERA_MODE=debug tool/aera.sh package          # build/aera/<name>-<version>-debug.aerap
+dart run surfaces_cli:surfaces serve                 # as WebUI X, commands run in .dart_tool/surfaces/device
+dart run surfaces_cli:surfaces serve --host kernelsu # or next, apatch, standalone, browser
+dart run surfaces_cli:surfaces serve --adb           # commands run on a rooted phone over adb
+dart run surfaces_cli:surfaces sim                   # the AERA simulator; frames land in build/aera/frames
+dart run surfaces_cli:surfaces doctor                # which tools each target needs
 ```
 
-`package` makes a release build: the Dart code is AOT-compiled into
-`libapp.so` (`tool/build_aot_app.sh`) and runs on the release engine from the
-kits release. `AERA_MODE=profile` or `debug` makes the others; `sim` always
-runs a debug build.
+## Make it yours
 
-`AERA_RENDERER` picks how the app draws: `gl` (the default, Skia on OpenGL
-ES through Zink), `vulkan` (Skia straight on the phone's Vulkan driver) or
-`impeller` (Impeller on Vulkan). All three use the GPU.
-
-The build is baked into the app: `String.fromEnvironment('AERA_APP_VERSION')`,
-`'AERA_APP_BUILD'` (commit and time) and `'AERA_RENDERER'`. Showing them
-helps on the phone, because AERA keeps the app running after a reinstall
-until you clear it from Recents.
-
-Copy the `.aerap` to the phone and install it from AERA's plugin screen. Name,
-version and description come from `aera.json`. For fast UI work,
-`flutter run -d linux` also works; AERA-only features then report that they
-are unavailable.
+1. Pick an id (letters, digits, `.`, `_`, `-`) and put it in `surfaces.yaml`
+   and in `SurfaceConfig(appId: ...)` in `lib/main.dart`. On WebUI hosts it is
+   the module id.
+2. Rename the package in `pubspec.yaml`, `linux/CMakeLists.txt` and
+   `android/app/build.gradle.kts` if you like.
+3. Write the UI in `lib/`. `Surface.instance` is the host: window, Back,
+   storage, files, toasts, theme, apps, shell, ops and the Rust core, each
+   with a fallback where the host lacks it. Check `Surface.instance.info.has(Cap.x)`
+   to show what is missing.
 
 ## Where things go
 
-- `lib/` Dart UI. `lib/aera/runtime.dart` loads the Rust library.
-- `rust/src/api/` Rust functions Dart can call. After changing them run
-  `flutter_rust_bridge_codegen generate`.
-- `aera-sdk` (from [aera-flutter-sdk](https://github.com/1vivy/aera-flutter-sdk))
-  is what reaches AERA: storage, device info, speaker audio, recovery language.
+- `lib/main.dart`: `Surface.init(...)` with the backends this app targets
+  (`WebUiBackend`, `AeraBackend`; desktop and tests fall back to `dart:io`).
+- `lib/native/`: loads the Rust library on native targets.
+- `rust/core/` (`app_core`): the app's Rust. `call`/`bytes` are the **core**
+  (sync, pure; `core.wasm` on the web). `AppOps` is the **ops** handler
+  (privileged or long work: the root worker on WebUI, in-process elsewhere).
+- `rust/worker/`: the WebUI module's root worker, a static musl binary.
+- `rust/src/api/`: the flutter_rust_bridge API for native targets. Run
+  `flutter_rust_bridge_codegen generate` after changing it.
+- `web/`: the page. It works on every WebUI host: no CDN, no service worker,
+  an ES5 fallback page for ancient WebViews.
+- `webui/`: the module files around the web build (see its README).
 
-## Inside AERA
+## Your app's Rust, and switching backends
 
-The app runs in AERA's browser jail: its own payload as `/`, no root, network
-but no listening sockets, `/profile` for private files, `/downloads` for
-`/sdcard/AERA/Downloads`, 512 MB of `/tmp`, about 1.5 GB of memory. The screen
-is 1080x2100 at 3x (360x700 logical pixels).
+An app made from this template (say `app-cbm`) keeps all of its Rust in its
+own `rust/` workspace: its logic in `core/`, the root worker in `worker/`,
+the flutter_rust_bridge crate at the top. Nothing app-specific goes into
+surfaces; the app only depends on `surfaces-core` (the request/response
+protocol) and `surfaces-ops` (the `Handler` trait, jobs, the worker's
+`main`, and built-ins such as `fs.list`).
 
-AERA's own system features come from the `aera_flutter` package
-([aera-flutter-sdk](https://github.com/1vivy/aera-flutter-sdk)):
+When the same job can be done several ways (fastboot from a PC, `dd` as
+root on the phone), put a trait for the job in `core/`, one implementation
+per way, and let the `Handler` pick the first one the host can use. Dart
+calls one op and never needs to know which way ran; a second op can list
+the backends so the UI can say what is possible here. The demo shows this
+in `rust/core/src/disks.rs` (the "Swappable backends" card on its Ops page).
 
-- **Back**: `AeraScope` (already in `lib/main.dart`) tells AERA whether the app
-  can go back, so the edge-back gesture pops routes and honours `PopScope`,
-  and leaves the app from its first page. Without it AERA never sends Back.
-- **Keyboard**: text fields open AERA's keyboard, and the app gets a bottom
-  view inset while it is up, so `Scaffold` keeps the field visible.
-- **Top bar**: `AeraSystem.instance` has `onForward`, `onReload`, `onOpen`
-  (Home and typed addresses) and `onZoom` (pinch), and `setNavigationState`
-  to enable Forward.
-- **Speaker**: `aera_sdk::speaker::Speaker::global().play(samples)` in Rust.
+## What you need
 
-Packaged builds are release (AOT) by default; the kits and engines come from
-[aera-flutter-embedder](https://github.com/1vivy/aera-flutter-embedder)
-releases.
+- Flutter 3.47.5 (AERA's kits are tied to this release)
+- Rust with `wasm32-unknown-unknown` and the `*-linux-musl` targets (the CLI
+  adds them), `zip`; for AERA also `xz` and `aarch64-linux-gnu-gcc`
+- `flutter_rust_bridge_codegen` 2.13.0 when you change `rust/src/api`
+
+The surfaces packages come from git, pinned to one commit in `pubspec.yaml`.
+To work on surfaces itself next to this app, add a `pubspec_overrides.yaml`
+(ignored by git) with path overrides.
