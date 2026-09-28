@@ -123,6 +123,7 @@ package)
     if [ "$mode" != debug ]; then
         # The embedder loads libapp.so when the engine runs AOT code.
         cp "$engine/usr/lib/libflutter_engine.so" build/aera/aot/libapp.so "$stage/usr/lib/"
+        cp "$engine/usr/share/flutter/icudtl.dat" "$stage/usr/share/flutter/"
     fi
     echo "$renderer" > "$stage/usr/share/flutter/renderer"
     # Anything the Rust library links must already be in the runtime.
