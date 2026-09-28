@@ -49,6 +49,22 @@ dart run surfaces_cli:surfaces doctor                # which tools each target n
   an ES5 fallback page for ancient WebViews.
 - `webui/`: the module files around the web build (see its README).
 
+## Your app's Rust, and switching backends
+
+An app made from this template (say `app-cbm`) keeps all of its Rust in its
+own `rust/` workspace: its logic in `core/`, the root worker in `worker/`,
+the flutter_rust_bridge crate at the top. Nothing app-specific goes into
+surfaces; the app only depends on `surfaces-core` (the request/response
+protocol) and `surfaces-ops` (the `Handler` trait, jobs, the worker's
+`main`, and built-ins such as `fs.list`).
+
+When the same job can be done several ways (fastboot from a PC, `dd` as
+root on the phone), put a trait for the job in `core/`, one implementation
+per way, and let the `Handler` pick the first one the host can use. Dart
+calls one op and never needs to know which way ran; a second op can list
+the backends so the UI can say what is possible here. The demo shows this
+in `rust/core/src/disks.rs` (the "Swappable backends" card on its Ops page).
+
 ## What you need
 
 - Flutter 3.47.5 (AERA's kits are tied to this release)
