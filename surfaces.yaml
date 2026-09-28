@@ -1,0 +1,12 @@
+# What `dart run surfaces_cli:surfaces build <target>` needs to know.
+id: surfaces_app            # KernelSU module id; letters, digits, . _ -
+name: Surfaces App
+version: 0.1.0
+author: you
+description: A Flutter app made from the surfaces template.
+worker: worker              # installed as $MODDIR/bin/worker
+rust:
+  dir: rust
+  native: app_native        # flutter_rust_bridge crate (AERA, desktop, Android)
+  core: app_core            # built to web/core.wasm
+  worker: app_worker        # the WebUI module's root worker

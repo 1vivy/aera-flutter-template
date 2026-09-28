@@ -3,7 +3,7 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
-import 'api/aera.dart';
+import 'api/surfaces.dart';
 
 import 'dart:async';
 import 'dart:convert';
@@ -58,7 +58,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
   @override
   Future<void> executeRustInitializers() async {
-    await api.crateApiAeraInitApp();
+    await api.crateApiSurfacesInitApp();
   }
 
   @override
@@ -69,11 +69,11 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => -525468901;
+  int get rustContentHash => -1468909560;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
-        stem: 'aera_app_core',
+        stem: 'app_native',
         ioDirectory: 'rust/target/release/',
         webPrefix: 'pkg/',
         wasmBindgenName: 'wasm_bindgen',
@@ -81,23 +81,19 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
-  Future<DeviceInfo> crateApiAeraDeviceInfo();
+  Uint8List crateApiSurfacesCoreBytes({required String request});
 
-  bool crateApiAeraInRecovery();
+  String crateApiSurfacesCoreCall({required String request});
 
-  Future<void> crateApiAeraInitApp();
+  Future<void> crateApiSurfacesInitApp();
 
-  Future<void> crateApiAeraPlayPcm({required List<int> samples});
+  String crateApiSurfacesOpsCall({required String request});
 
-  Future<void> crateApiAeraPlayTone({
-    required double frequencyHz,
-    required int milliseconds,
-    required double volume,
-  });
+  String crateApiSurfacesOpsCancel({required String id});
 
-  String crateApiAeraRecoveryLocale();
+  String crateApiSurfacesOpsPoll({required String id});
 
-  StorageDirs crateApiAeraStorageDirs();
+  String crateApiSurfacesOpsStart({required String request});
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -109,56 +105,53 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
-  Future<DeviceInfo> crateApiAeraDeviceInfo() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 1,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_device_info,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiAeraDeviceInfoConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiAeraDeviceInfoConstMeta =>
-      const TaskConstMeta(debugName: "device_info", argNames: []);
-
-  @override
-  bool crateApiAeraInRecovery() {
+  Uint8List crateApiSurfacesCoreBytes({required String request}) {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 2)!;
+          sse_encode_String(request, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 1)!;
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_bool,
+          decodeSuccessData: sse_decode_list_prim_u_8_strict,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiAeraInRecoveryConstMeta,
-        argValues: [],
+        constMeta: kCrateApiSurfacesCoreBytesConstMeta,
+        argValues: [request],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiAeraInRecoveryConstMeta =>
-      const TaskConstMeta(debugName: "in_recovery", argNames: []);
+  TaskConstMeta get kCrateApiSurfacesCoreBytesConstMeta =>
+      const TaskConstMeta(debugName: "core_bytes", argNames: ["request"]);
 
   @override
-  Future<void> crateApiAeraInitApp() {
+  String crateApiSurfacesCoreCall({required String request}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(request, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 2)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiSurfacesCoreCallConstMeta,
+        argValues: [request],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiSurfacesCoreCallConstMeta =>
+      const TaskConstMeta(debugName: "core_call", argNames: ["request"]);
+
+  @override
+  Future<void> crateApiSurfacesInitApp() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -174,129 +167,107 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiAeraInitAppConstMeta,
+        constMeta: kCrateApiSurfacesInitAppConstMeta,
         argValues: [],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiAeraInitAppConstMeta =>
+  TaskConstMeta get kCrateApiSurfacesInitAppConstMeta =>
       const TaskConstMeta(debugName: "init_app", argNames: []);
 
   @override
-  Future<void> crateApiAeraPlayPcm({required List<int> samples}) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_list_prim_i_16_loose(samples, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 4,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: sse_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiAeraPlayPcmConstMeta,
-        argValues: [samples],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiAeraPlayPcmConstMeta =>
-      const TaskConstMeta(debugName: "play_pcm", argNames: ["samples"]);
-
-  @override
-  Future<void> crateApiAeraPlayTone({
-    required double frequencyHz,
-    required int milliseconds,
-    required double volume,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_f_32(frequencyHz, serializer);
-          sse_encode_u_32(milliseconds, serializer);
-          sse_encode_f_32(volume, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 5,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: sse_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiAeraPlayToneConstMeta,
-        argValues: [frequencyHz, milliseconds, volume],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiAeraPlayToneConstMeta => const TaskConstMeta(
-    debugName: "play_tone",
-    argNames: ["frequencyHz", "milliseconds", "volume"],
-  );
-
-  @override
-  String crateApiAeraRecoveryLocale() {
+  String crateApiSurfacesOpsCall({required String request}) {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(request, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 4)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiSurfacesOpsCallConstMeta,
+        argValues: [request],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiSurfacesOpsCallConstMeta =>
+      const TaskConstMeta(debugName: "ops_call", argNames: ["request"]);
+
+  @override
+  String crateApiSurfacesOpsCancel({required String id}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(id, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 5)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiSurfacesOpsCancelConstMeta,
+        argValues: [id],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiSurfacesOpsCancelConstMeta =>
+      const TaskConstMeta(debugName: "ops_cancel", argNames: ["id"]);
+
+  @override
+  String crateApiSurfacesOpsPoll({required String id}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(id, serializer);
           return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 6)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_String,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiAeraRecoveryLocaleConstMeta,
-        argValues: [],
+        constMeta: kCrateApiSurfacesOpsPollConstMeta,
+        argValues: [id],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiAeraRecoveryLocaleConstMeta =>
-      const TaskConstMeta(debugName: "recovery_locale", argNames: []);
+  TaskConstMeta get kCrateApiSurfacesOpsPollConstMeta =>
+      const TaskConstMeta(debugName: "ops_poll", argNames: ["id"]);
 
   @override
-  StorageDirs crateApiAeraStorageDirs() {
+  String crateApiSurfacesOpsStart({required String request}) {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(request, serializer);
           return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 7)!;
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_storage_dirs,
+          decodeSuccessData: sse_decode_String,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiAeraStorageDirsConstMeta,
-        argValues: [],
+        constMeta: kCrateApiSurfacesOpsStartConstMeta,
+        argValues: [request],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiAeraStorageDirsConstMeta =>
-      const TaskConstMeta(debugName: "storage_dirs", argNames: []);
-
-  @protected
-  AnyhowException dco_decode_AnyhowException(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return AnyhowException(raw as String);
-  }
+  TaskConstMeta get kCrateApiSurfacesOpsStartConstMeta =>
+      const TaskConstMeta(debugName: "ops_start", argNames: ["request"]);
 
   @protected
   String dco_decode_String(dynamic raw) {
@@ -305,80 +276,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  bool dco_decode_bool(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw as bool;
-  }
-
-  @protected
-  DeviceInfo dco_decode_device_info(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 6)
-      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
-    return DeviceInfo(
-      kernel: dco_decode_String(arr[0]),
-      machine: dco_decode_String(arr[1]),
-      cpuCount: dco_decode_u_32(arr[2]),
-      totalRamBytes: dco_decode_u_64(arr[3]),
-      freeRamBytes: dco_decode_u_64(arr[4]),
-      uptimeSeconds: dco_decode_u_64(arr[5]),
-    );
-  }
-
-  @protected
-  double dco_decode_f_32(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw as double;
-  }
-
-  @protected
-  int dco_decode_i_16(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw as int;
-  }
-
-  @protected
-  List<int> dco_decode_list_prim_i_16_loose(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw as List<int>;
-  }
-
-  @protected
-  Int16List dco_decode_list_prim_i_16_strict(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw as Int16List;
-  }
-
-  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as Uint8List;
-  }
-
-  @protected
-  StorageDirs dco_decode_storage_dirs(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    final arr = raw as List<dynamic>;
-    if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
-    return StorageDirs(
-      appData: dco_decode_String(arr[0]),
-      downloads: dco_decode_String(arr[1]),
-      temp: dco_decode_String(arr[2]),
-    );
-  }
-
-  @protected
-  int dco_decode_u_32(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw as int;
-  }
-
-  @protected
-  BigInt dco_decode_u_64(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dcoDecodeU64(raw);
   }
 
   @protected
@@ -394,13 +294,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var inner = sse_decode_String(deserializer);
-    return AnyhowException(inner);
-  }
-
-  @protected
   String sse_decode_String(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var inner = sse_decode_list_prim_u_8_strict(deserializer);
@@ -408,86 +301,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  bool sse_decode_bool(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getUint8() != 0;
-  }
-
-  @protected
-  DeviceInfo sse_decode_device_info(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_kernel = sse_decode_String(deserializer);
-    var var_machine = sse_decode_String(deserializer);
-    var var_cpuCount = sse_decode_u_32(deserializer);
-    var var_totalRamBytes = sse_decode_u_64(deserializer);
-    var var_freeRamBytes = sse_decode_u_64(deserializer);
-    var var_uptimeSeconds = sse_decode_u_64(deserializer);
-    return DeviceInfo(
-      kernel: var_kernel,
-      machine: var_machine,
-      cpuCount: var_cpuCount,
-      totalRamBytes: var_totalRamBytes,
-      freeRamBytes: var_freeRamBytes,
-      uptimeSeconds: var_uptimeSeconds,
-    );
-  }
-
-  @protected
-  double sse_decode_f_32(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getFloat32();
-  }
-
-  @protected
-  int sse_decode_i_16(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getInt16();
-  }
-
-  @protected
-  List<int> sse_decode_list_prim_i_16_loose(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var len_ = sse_decode_i_32(deserializer);
-    return deserializer.buffer.getInt16List(len_);
-  }
-
-  @protected
-  Int16List sse_decode_list_prim_i_16_strict(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var len_ = sse_decode_i_32(deserializer);
-    return deserializer.buffer.getInt16List(len_);
-  }
-
-  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
     return deserializer.buffer.getUint8List(len_);
-  }
-
-  @protected
-  StorageDirs sse_decode_storage_dirs(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_appData = sse_decode_String(deserializer);
-    var var_downloads = sse_decode_String(deserializer);
-    var var_temp = sse_decode_String(deserializer);
-    return StorageDirs(
-      appData: var_appData,
-      downloads: var_downloads,
-      temp: var_temp,
-    );
-  }
-
-  @protected
-  int sse_decode_u_32(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getUint32();
-  }
-
-  @protected
-  BigInt sse_decode_u_64(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getBigUint64();
   }
 
   @protected
@@ -508,69 +325,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_AnyhowException(
-    AnyhowException self,
-    SseSerializer serializer,
-  ) {
+  bool sse_decode_bool(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(self.message, serializer);
+    return deserializer.buffer.getUint8() != 0;
   }
 
   @protected
   void sse_encode_String(String self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_list_prim_u_8_strict(utf8.encoder.convert(self), serializer);
-  }
-
-  @protected
-  void sse_encode_bool(bool self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putUint8(self ? 1 : 0);
-  }
-
-  @protected
-  void sse_encode_device_info(DeviceInfo self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(self.kernel, serializer);
-    sse_encode_String(self.machine, serializer);
-    sse_encode_u_32(self.cpuCount, serializer);
-    sse_encode_u_64(self.totalRamBytes, serializer);
-    sse_encode_u_64(self.freeRamBytes, serializer);
-    sse_encode_u_64(self.uptimeSeconds, serializer);
-  }
-
-  @protected
-  void sse_encode_f_32(double self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putFloat32(self);
-  }
-
-  @protected
-  void sse_encode_i_16(int self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putInt16(self);
-  }
-
-  @protected
-  void sse_encode_list_prim_i_16_loose(
-    List<int> self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.length, serializer);
-    serializer.buffer.putInt16List(
-      self is Int16List ? self : Int16List.fromList(self),
-    );
-  }
-
-  @protected
-  void sse_encode_list_prim_i_16_strict(
-    Int16List self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.length, serializer);
-    serializer.buffer.putInt16List(self);
   }
 
   @protected
@@ -581,26 +344,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     serializer.buffer.putUint8List(self);
-  }
-
-  @protected
-  void sse_encode_storage_dirs(StorageDirs self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_String(self.appData, serializer);
-    sse_encode_String(self.downloads, serializer);
-    sse_encode_String(self.temp, serializer);
-  }
-
-  @protected
-  void sse_encode_u_32(int self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putUint32(self);
-  }
-
-  @protected
-  void sse_encode_u_64(BigInt self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putBigUint64(self);
   }
 
   @protected
@@ -618,5 +361,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_i_32(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putInt32(self);
+  }
+
+  @protected
+  void sse_encode_bool(bool self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint8(self ? 1 : 0);
   }
 }

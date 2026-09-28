@@ -50,3 +50,6 @@ app.*.map.json
 # AERA kits and builds
 /.aera/
 /rust/target/
+
+# Local path overrides for working on surfaces itself
+pubspec_overrides.yaml

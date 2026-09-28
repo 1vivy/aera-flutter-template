@@ -1,0 +1,15 @@
+[package]
+name = "app_core"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+# cdylib is the web build (core.wasm); rlib is what app_native and
+# app_worker link.
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+surfaces-core = { workspace = true }
+surfaces-ops = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
